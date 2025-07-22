@@ -1,39 +1,91 @@
-from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
 import pandas as pd
 import pickle
 import json
+import logging
+from typing import Tuple, Dict, Any
+from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
+import os
+# Configure logging
+logging.basicConfig(
+    filename='logs/model_evaluation.log',
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s:%(message)s'
+)
 
-# Load the trained Random Forest model from disk
-with open("models/random_forest_model.pkl", "rb") as model_file:
-    model = pickle.load(model_file)
+def load_model(model_path: str) -> Any:
+    """Load a trained model from disk."""
+    try:
+        with open(model_path, "rb") as model_file:
+            model = pickle.load(model_file)
+        logging.info(f"Model loaded from {model_path}")
+        return model
+    except Exception as e:
+        logging.error(f"Error loading model: {e}")
+        raise
 
-# Load the Bag-of-Words test data
-test_data = pd.read_csv("data/interim/test_bow.csv")
+def load_test_data(test_path: str) -> pd.DataFrame:
+    """Load test data from CSV."""
+    try:
+        test_data = pd.read_csv(test_path)
+        logging.info(f"Test data loaded from {test_path}")
+        return test_data
+    except Exception as e:
+        logging.error(f"Error loading test data: {e}")
+        raise
 
-# Separate features and labels from test data
-X_test = test_data.drop(columns=['sentiment']).values
-y_test = test_data['sentiment'].values
+def split_features_labels(df: pd.DataFrame) -> Tuple[Any, Any]:
+    """Split DataFrame into features and labels."""
+    try:
+        X_test = df.drop(columns=['sentiment']).values
+        y_test = df['sentiment'].values
+        logging.info("Split test data into features and labels.")
+        return X_test, y_test
+    except Exception as e:
+        logging.error(f"Error splitting features and labels: {e}")
+        raise
 
-# Make predictions on the test data
-y_pred = model.predict(X_test)
+def evaluate_model(model: Any, X_test: Any, y_test: Any) -> Dict[str, float]:
+    """Evaluate the model and return metrics."""
+    try:
+        y_pred = model.predict(X_test)
+        accuracy = accuracy_score(y_test, y_pred)
+        precision = precision_score(y_test, y_pred, average='weighted')
+        recall = recall_score(y_test, y_pred, average='weighted')
+        roc_auc = roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])
+        logging.info("Model evaluation metrics calculated.")
+        return {
+            "accuracy": accuracy,
+            "precision": precision,
+            "recall": recall,
+            "roc_auc": roc_auc
+        }
+    except Exception as e:
+        logging.error(f"Error during model evaluation: {e}")
+        raise
 
-# Calculate evaluation metrics: accuracy, precision, recall
-accuracy = accuracy_score(y_test, y_pred)
-precision = precision_score(y_test, y_pred, average='weighted')
-recall = recall_score(y_test, y_pred, average='weighted')
+def save_metrics(metrics: Dict[str, float], path: str) -> None:
+    """Save evaluation metrics to a JSON file."""
+    try:
+        with open(path, "w") as metrics_file:
+            json.dump(metrics, metrics_file, indent=4)
+        logging.info(f"Evaluation metrics saved to {path}")
+    except Exception as e:
+        logging.error(f"Error saving evaluation metrics: {e}")
+        raise
 
-# Calculate ROC AUC score using predicted probabilities
-roc_auc = roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])
+def main() -> None:
+    """Main function to orchestrate model evaluation."""
+    try:
+        model = load_model("models/random_forest_model.pkl")
+        test_data = load_test_data("data/interim/test_bow.csv")
+        X_test, y_test = split_features_labels(test_data)
+        metrics = evaluate_model(model, X_test, y_test)
+        os.makedirs("reports", exist_ok=True)
+        save_metrics(metrics, "reports/model_evaluation.json")
+        logging.info("Model evaluation pipeline completed successfully.")
+    except Exception as e:
+        logging.critical(f"Critical error in model evaluation pipeline: {e}")
+        raise
 
-
-# Store all evaluation metrics in a dictionary
-evaluation_metrics = {
-    "accuracy": accuracy,
-    "precision": precision,
-    "recall": recall,
-    "roc_auc": roc_auc
-}
-
-# Save evaluation metrics to a JSON file for later reference
-with open("reports/model_evaluation.json", "w") as metrics_file:
-    json.dump(evaluation_metrics, metrics_file, indent=4)
+if __name__ == "__main__":
+    main()

@@ -1,28 +1,97 @@
 import numpy as np
 import pandas as pd
 import os
-
+import yaml
+import logging
+from typing import Tuple
 from sklearn.model_selection import train_test_split
 
-# Read the dataset directly from a GitHub URL
-df = pd.read_csv('https://raw.githubusercontent.com/campusx-official/jupyter-masterclass/main/tweet_emotions.csv')
+# Configure logging
+logging.basicConfig(
+    filename='logs/data_ingestion.log',
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s:%(message)s'
+)
 
-# Drop the 'tweet_id' column as it's not needed for analysis
-df.drop(columns=['tweet_id'], inplace=True)
+def load_params(params_path: str) -> dict:
+    """Load parameters from a YAML file."""
+    try:
+        with open(params_path, 'r') as file:
+            params = yaml.safe_load(file)
+        logging.info(f"Parameters loaded from {params_path}")
+        return params
+    except Exception as e:
+        logging.error(f"Error loading parameters: {e}")
+        raise
 
-# Filter the DataFrame to include only 'happiness' and 'sadness' sentiments
-final_df = df[df['sentiment'].isin(['happiness', 'sadness'])]
+def fetch_dataset(url: str) -> pd.DataFrame:
+    """Fetch dataset from a given URL."""
+    try:
+        df = pd.read_csv(url)
+        logging.info(f"Dataset loaded from {url}")
+        return df
+    except Exception as e:
+        logging.error(f"Error fetching dataset: {e}")
+        raise
 
-# Encode 'happiness' as 1 and 'sadness' as 0 for binary classification
-final_df['sentiment'] = final_df['sentiment'].replace({'happiness': 1, 'sadness': 0})
+def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
+    """Preprocess the dataset for binary classification."""
+    try:
+        # Drop unnecessary columns
+        df = df.drop(columns=['tweet_id'])
+        logging.info("Dropped 'tweet_id' column.")
 
+        # Filter for 'happiness' and 'sadness'
+        df = df[df['sentiment'].isin(['happiness', 'sadness'])]
+        logging.info("Filtered for 'happiness' and 'sadness' sentiments.")
 
-# Split the data into training and testing sets (80% train, 20% test)
-df_test, df_train = train_test_split(final_df, test_size=0.2, random_state=42)
+        # Encode sentiments
+        df['sentiment'] = df['sentiment'].replace({'happiness': 1, 'sadness': 0}).astype(int)
+        logging.info("Encoded sentiments for binary classification.")
 
-# Create the directory to store raw data if it doesn't exist
-os.makedirs('data/raw', exist_ok=True)
+        return df
+    except Exception as e:
+        logging.error(f"Error during preprocessing: {e}")
+        raise
 
-# Save the training and testing data to CSV files
-df_test.to_csv('data/raw/test.csv', index=False)
-df_train.to_csv('data/raw/train.csv', index=False)
+def split_data(df: pd.DataFrame, test_size: float, random_state: int = 42) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Split the data into train and test sets."""
+    try:
+        df_train, df_test = train_test_split(df, test_size=test_size, random_state=random_state)
+        logging.info(f"Data split into train and test sets with test_size={test_size}")
+        return df_train, df_test
+    except Exception as e:
+        logging.error(f"Error splitting data: {e}")
+        raise
+
+def save_data(df: pd.DataFrame, path: str) -> None:
+    """Save DataFrame to CSV."""
+    try:
+        df.to_csv(path, index=False)
+        logging.info(f"Data saved to {path}")
+    except Exception as e:
+        logging.error(f"Error saving data to {path}: {e}")
+        raise
+
+def main() -> None:
+    """Main function to orchestrate data ingestion."""
+    try:
+        params = load_params('params.yaml')
+        test_size = params['data_ingestion']['test_size']
+
+        df = fetch_dataset('https://raw.githubusercontent.com/campusx-official/jupyter-masterclass/main/tweet_emotions.csv')
+        final_df = preprocess_data(df)
+        df_train, df_test = split_data(final_df, test_size)
+
+        os.makedirs('data/raw', exist_ok=True)
+        logging.info("Ensured 'data/raw' directory exists.")
+
+        save_data(df_train, 'data/raw/train.csv')
+        save_data(df_test, 'data/raw/test.csv')
+        logging.info("Data ingestion pipeline completed successfully.")
+    except Exception as e:
+        logging.critical(f"Critical error in data ingestion pipeline: {e}")
+        raise
+
+if __name__ ==  "__main__":
+    main()

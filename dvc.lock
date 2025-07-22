@@ -5,98 +5,98 @@ stages:
     deps:
     - path: .\src\data\data_ingestion.py
       hash: md5
-      md5: 30854f96d8d34c0519a524c58e1d296b
-      size: 1099
+      md5: 49a5048ff4268a0dbc8c4c82e7e41067
+      size: 3428
     outs:
     - path: data\raw\test.csv
       hash: md5
-      md5: a2aa88dfae8af3dc60e6e24a09304f4e
-      size: 663799
+      md5: 00e92fbd32276319d5b2efb0c047cd51
+      size: 248475
     - path: data\raw\train.csv
       hash: md5
-      md5: 35b06980c6e00772e6bf783ae10ab9b7
-      size: 164174
+      md5: 0b51c9a20421c5215654dc30eb0cb163
+      size: 579498
   data_preprocessing:
     cmd: python .\src\data\data_preprocessing.py
     deps:
     - path: .\src\data\data_preprocessing.py
       hash: md5
-      md5: ab8d5dcf9376a4fcd1ce762a7cc61d5c
-      size: 3186
+      md5: 8481afc91492be928cc88c9935fbe8db
+      size: 5367
     - path: data\raw\test.csv
       hash: md5
-      md5: a2aa88dfae8af3dc60e6e24a09304f4e
-      size: 663799
+      md5: 00e92fbd32276319d5b2efb0c047cd51
+      size: 248475
     - path: data\raw\train.csv
       hash: md5
-      md5: 35b06980c6e00772e6bf783ae10ab9b7
-      size: 164174
+      md5: 0b51c9a20421c5215654dc30eb0cb163
+      size: 579498
     outs:
     - path: .\data\processed\test.csv
       hash: md5
-      md5: 637f3709b44460480d998aff20ae7a5e
-      size: 453554
+      md5: ea8c6c3edabd69cb841e28e463f4a380
+      size: 168090
     - path: .\data\processed\train.csv
       hash: md5
-      md5: 870497ce96052cddf73c1a13036432ef
-      size: 112656
+      md5: 5b3384ec36a6cc4b7bf15489465ec241
+      size: 392431
   feature_engg:
     cmd: python .\src\features\feature_engg.py
     deps:
     - path: .\src\features\feature_engg.py
       hash: md5
-      md5: 9bc83c451ee1d6866010dd54da0e3292
-      size: 1435
+      md5: 4dd4d1d98c296b62adb19c293aba9c53
+      size: 3836
     - path: data\processed\test.csv
       hash: md5
-      md5: 637f3709b44460480d998aff20ae7a5e
-      size: 453554
+      md5: ea8c6c3edabd69cb841e28e463f4a380
+      size: 168090
     - path: data\processed\train.csv
       hash: md5
-      md5: 870497ce96052cddf73c1a13036432ef
-      size: 112656
+      md5: 5b3384ec36a6cc4b7bf15489465ec241
+      size: 392431
     outs:
     - path: data\interim\test_bow.csv
       hash: md5
-      md5: 59382035f95ce748319dfe90e5247503
-      size: 90084220
+      md5: 146204f3a6301527c3966e684a3f4037
+      size: 894654
     - path: data\interim\train_bow.csv
       hash: md5
-      md5: 3475ddfb637366ac70488cb851507ef0
-      size: 22535148
+      md5: c5f84c7b00b2652952efae99ed9a56c4
+      size: 2105745
   modelling:
     cmd: python .\src\models\modelling.py
     deps:
     - path: .\src\models\modelling.py
       hash: md5
-      md5: d03803d680144999aa1764f921f153ae
-      size: 682
+      md5: 510ee3d98c598aa4d244d9167be74da5
+      size: 3133
     - path: data\interim\train_bow.csv
       hash: md5
-      md5: 3475ddfb637366ac70488cb851507ef0
-      size: 22535148
+      md5: c5f84c7b00b2652952efae99ed9a56c4
+      size: 2105745
     outs:
     - path: models\random_forest_model.pkl
       hash: md5
-      md5: 7c6992b967e8a6461e0e9a72ff211025
-      size: 13134973
+      md5: 33480235a9b30aaf9a7dc634cff8980e
+      size: 1287975
   model_evaluation:
     cmd: python .\src\models\model_evaluation.py
     deps:
     - path: .\src\models\model_evaluation.py
       hash: md5
-      md5: 808dfb61393367e292fe566db9ec46b5
-      size: 1326
+      md5: d19c6c9dbd32cc46ca7161633674fec2
+      size: 3362
     - path: data\interim\test_bow.csv
       hash: md5
-      md5: 59382035f95ce748319dfe90e5247503
-      size: 90084220
+      md5: 146204f3a6301527c3966e684a3f4037
+      size: 894654
     - path: models\random_forest_model.pkl
       hash: md5
-      md5: 7c6992b967e8a6461e0e9a72ff211025
-      size: 13134973
+      md5: 33480235a9b30aaf9a7dc634cff8980e
+      size: 1287975
     outs:
     - path: reports\model_evaluation.json
       hash: md5
-      md5: 0dcaa5a42e7b775e5abd838cb8d9dc89
+      md5: 4d811284e95e266e1bad3c34b22b485f
       size: 149
